@@ -550,7 +550,7 @@ struct MavLinkDroneController::impl {
         return static_cast<const GpsBase*>(sensors_->getByType(SensorCollection::SensorType::Gps));
     }
 
-    void update(real_T dt)
+    void update()
     {
         if (sensors_ == nullptr || connection_ == nullptr || !connection_->isOpen())
             return;
@@ -1117,9 +1117,9 @@ void MavLinkDroneController::reset()
 {
     pimpl_->reset();
 }
-void MavLinkDroneController::update(real_T dt)
+void MavLinkDroneController::update()
 {
-    pimpl_->update(dt);
+    pimpl_->update();
 }
 real_T MavLinkDroneController::getVertexControlSignal(unsigned int rotor_index)
 {
