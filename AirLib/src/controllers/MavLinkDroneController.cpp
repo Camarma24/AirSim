@@ -777,11 +777,6 @@ struct MavLinkDroneController::impl {
         return VectorMath::toQuaternion(current_state.attitude.pitch, current_state.attitude.roll, current_state.attitude.yaw);
     }
 
-    double timestampNow()
-    {
-        return static_cast<double>(mav_vehicle_->getTimeStamp());
-    }
-
     //administrative
 
     bool armDisarm(bool arm, CancelableBase& cancelable_action)
@@ -1169,11 +1164,6 @@ GeoPoint MavLinkDroneController::getGpsLocation()
 Quaternionr MavLinkDroneController::getOrientation()
 {
     return pimpl_->getOrientation();
-}
-
-double MavLinkDroneController::timestampNow()
-{
-    return pimpl_->timestampNow();
 }
 
 //administrative
