@@ -72,8 +72,9 @@ private:
 
         getNextKinematicsNoCollison(dt, body, current, next, next_wrench);
 
-        if (!getNextKinematicsOnCollison(dt, body, current, next, next_wrench))
-            getNextKinematicsOnGround(dt, body, current, next, next_wrench);
+        getNextKinematicsOnCollison(dt, body, current, next, next_wrench);
+        //if (!getNextKinematicsOnCollison(dt, body, current, next, next_wrench))
+        //    getNextKinematicsOnGround(dt, body, current, next, next_wrench);
         
         body.setKinematics(next);
         body.setWrench(next_wrench);
@@ -88,71 +89,85 @@ private:
         const CollisionInfo collison_info = body.getCollisionInfo();
         //if there is collison
         if (collison_info.has_collided) {
-            //are we going away from collison?
-            real_T vnext_normal_mag = -collison_info.normal.dot(next.twist.linear + next.accelerations.linear *dt);
-            //if not then we need collison response
-            if (Utils::isDefinitelyGreaterThan(vnext_normal_mag, 0.0f)) {
-                //get current velocity's reflection
-                Vector3r vcur_avg = current.twist.linear + current.accelerations.linear * dt;
-                real_T vcur_normal_mag = -collison_info.normal.dot(vcur_avg);
+            //determine if we are going away from collison?
+            Vector3r vnext_linear = next.twist.linear + next.accelerations.linear * dt;
+            Vector3r vnext_angular = next.twist.angular + next.accelerations.angular * dt;
 
-                //if current velocity is going away from collison then don't reflect it
-                if (Utils::isDefinitelyGreaterThan(vcur_normal_mag, 0.0f)) {
+            //contact point vector
+            Vector3r r = collison_info.impact_point - collison_info.position;
 
-                    /********** Core collison response ***********/
-
-                    //get average angular velocity
-                    Vector3r angular_avg = current.twist.angular + current.accelerations.angular * dt;
-
-                    //contact point vector
-                    Vector3r r = collison_info.impact_point - collison_info.position;
-                    //velocity at contact point
-                    Vector3r contact_vel = vcur_avg + angular_avg.cross(r);
-
-                    /*
-                        GafferOnGames - Collison response with columb friction
-                        http://gafferongames.com/virtual-go/collision-response-and-coulomb-friction/
-                        Assuming collison is with static fixed body,
-                        impulse magnitude = j = -(1 + R)V.N / (1/m + (I'(r X N) X r).N)
-                        Physics Part 3, Collison Response, Chris Hecker, eq 4(a)
-                        http://chrishecker.com/images/e/e7/Gdmphys3.pdf
-                        V(t+1) = V(t) + j*N / m
-                    */
-                    real_T impulse_mag_denom = 1.0f / body.getMass() + 
-                        (body.getInertiaInv() * r.cross(collison_info.normal))
-                        .cross(r)
-                        .dot(collison_info.normal);
-                    real_T impulse_mag = -contact_vel.dot(collison_info.normal) * (1 + body.getRestitution()) / impulse_mag_denom;
-
-                    next.twist.linear = vcur_avg + collison_info.normal * (impulse_mag / body.getMass());
-                    next.twist.angular = angular_avg + r.cross(collison_info.normal) * impulse_mag;
-
-                    //above would modify component in direction of normal
-                    //we will use friction to modify component in direction of tangent
-                    Vector3r contact_tang = contact_vel - collison_info.normal * collison_info.normal.dot(contact_vel);
-                    Vector3r contact_tang_unit = contact_tang.normalized();
-                    real_T friction_mag_denom =  1.0f / body.getMass() + 
-                        (body.getInertiaInv() * r.cross(contact_tang_unit))
-                        .cross(r)
-                        .dot(contact_tang_unit);
-                    real_T friction_mag = -contact_tang.norm() * body.getFriction() / friction_mag_denom;
-
-                    next.twist.linear += contact_tang_unit * friction_mag;
-                    next.twist.angular += r.cross(contact_tang_unit) * (friction_mag / body.getMass());
+            //are we hitting the bottom?
+            Vector3r body_z = VectorMath::transformToWorldFrame(Vector3r::UnitZ(), current.pose.orientation, true);
+            real_T body_z_world_z = body_z.dot(Vector3r::UnitZ()) - 1;
+            if (body_z_world_z <= 0.1f && body_z_world_z >= -0.1f) {
+                real_T impact_z_dir = collison_info.normal.dot(Vector3r::UnitZ()) + 1;
+                if (impact_z_dir <= 0.1f && impact_z_dir >= -0.1f) {
+                    if (r.z() >= 0.16f && r.z() <= 0.20f) {
+                        r.x() = 0;
+                        r.y() = 0;
+                    }
                 }
-                else
-                    next.twist.linear = vcur_avg;
+            }
+
+
+            //net velocity at contact point
+            Vector3r vnext_angular_world = VectorMath::transformToWorldFrame(vnext_angular, next.pose.orientation, true);
+            Vector3r vnext_contact = vnext_linear + vnext_angular_world.cross(r);
+            //is velocity at contact is in opposite direction as normal?
+            real_T vnext_contact_normal_mag = collison_info.normal.dot(vnext_contact);
+
+            //if we are not moving away
+            if (Utils::isDefinitelyLessThan(vnext_contact_normal_mag, 0.0f)) {
+                //we are going to reset next kinematics using collison response
+                //first we convert our input vectors to body coordinates
+
+                Vector3r vb = VectorMath::transformToBodyFrame(current.twist.linear, next.pose.orientation);
+                Vector3r rb = VectorMath::transformToBodyFrame(r, current.pose.orientation);
+                Vector3r nb = VectorMath::transformToBodyFrame(collison_info.normal, current.pose.orientation);
+                Vector3r vcb = vb + current.twist.angular.cross(rb);
+
+                //compute the magnitude of impulse force assuming collison is with fixed body
+                Vector3r rbXnb = rb.cross(nb);
+                Vector3r rbXnbI = body.getInertiaInv() * rbXnb;
+
+                real_T j_nom = -(1 + body.getRestitution()) * vcb.dot(nb);
+                //real_T j_denom = 1.0f / body.getMass() + (body.getInertiaInv() * r.cross(collison_info.normal).cross(r)).dot(collison_info.normal);
+                real_T j_denom = 1.0f / body.getMass() + rbXnb.dot(rbXnbI);
+                    //(body.getInertiaInv() * r.cross(collison_info.normal).cross(r)).dot(collison_info.normal);
+                real_T j = j_nom / j_denom;
+
+                next.twist.linear = current.twist.linear + (j * collison_info.normal / body.getMass());
+                next.twist.angular = current.twist.angular + (j * rbXnbI);
+
+                //compute new velocity at contact
+                vb = VectorMath::transformToBodyFrame(current.twist.linear, next.pose.orientation);
+                vcb = vb + current.twist.angular.cross(rb);
+                Vector3r vtb = vcb - nb * vcb.dot(nb);
+                if (Utils::isDefinitelyGreaterThan(vtb.squaredNorm(), 1E-6f)) {
+                    Vector3r vtnb = vtb.normalized();
+                    real_T jf_nom = - vcb.dot(vtnb);
+                    //real_T jf_denom = 1.0f / body.getMass() + (body.getInertiaInv() * r.cross(tangent).cross(r)).dot(tangent);
+                    real_T jf_denom = 1.0f / body.getMass() +
+                        rb.cross(vtnb).dot(body.getInertiaInv() * rb.cross(vtnb));
+                    real_T jf = Utils::clip(jf_nom / jf_denom, -body.getFriction() * j, body.getFriction() * j);
+
+                    Vector3r vtn = VectorMath::transformToWorldFrame(vtnb, current.pose.orientation);
+                    next.twist.linear += (jf * vtn / body.getMass());
+                    next.twist.angular += (jf * body.getInertiaInv() * rb.cross(vtnb));
+                }
 
                 //there is no acceleration during collison response
                 next.accelerations.linear = Vector3r::Zero();
                 next.accelerations.angular = Vector3r::Zero();
-                
-                //do not use current.pose because it might be invalid
-                next.pose.position = collison_info.position + (collison_info.normal * collison_info.penetration_depth) + next.twist.linear * (dt * kCollisionResponseCycles);
+
+                //if there is penetration, move out
+                next.pose.position = collison_info.position + (collison_info.normal * collison_info.penetration_depth); // +next.twist.linear * (dt * kCollisionResponseCycles);
                 next_wrench = Wrench::zero();
 
                 return true;
             }
+            //else no collison response needed because we are already moving away
+            //keep previously caomputed next kinematics
         }
 
         return false;

@@ -164,17 +164,17 @@ public:
             return q.conjugate()._transformVector(v);
     }    
 
-    static Vector3T transformToBodyFrame(const Vector3T& v_world, const QuaternionT& q, bool assume_unit_quat)
+    static Vector3T transformToBodyFrame(const Vector3T& v_world, const QuaternionT& q, bool assume_unit_quat = true)
     {
         return rotateVectorReverse(v_world, q, assume_unit_quat);
     }
 
-    static Vector3T transformToWorldFrame(const Vector3T& v_body, const QuaternionT& q, bool assume_unit_quat)
+    static Vector3T transformToWorldFrame(const Vector3T& v_body, const QuaternionT& q, bool assume_unit_quat = true)
     {
         return rotateVector(v_body, q, assume_unit_quat);
     }
 
-    static Vector3T transformToWorldFrame(const Vector3T& v_body, const Pose& pose, bool assume_unit_quat)
+    static Vector3T transformToWorldFrame(const Vector3T& v_body, const Pose& pose, bool assume_unit_quat = true)
     {
         //translate
         Vector3T translated = v_body + pose.position;
