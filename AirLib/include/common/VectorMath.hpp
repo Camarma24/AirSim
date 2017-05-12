@@ -19,17 +19,17 @@ class VectorMathT {
 public:
     //IMPORTANT: make sure fixed size vectorizable types have no alignment assumption
     //https://eigen.tuxfamily.org/dox/group__TopicUnalignedArrayAssert.html
-	typedef Eigen::Matrix<float, 1, 1> Vector1f;
-	typedef Eigen::Matrix<double, 1, 1> Vector1d;
-	typedef Eigen::Matrix<float,2,1,Eigen::DontAlign> Vector2f;
-	typedef Eigen::Matrix<double,4,1,Eigen::DontAlign> Vector2d;
+    typedef Eigen::Matrix<float, 1, 1> Vector1f;
+    typedef Eigen::Matrix<double, 1, 1> Vector1d;
+    typedef Eigen::Matrix<float,2,1,Eigen::DontAlign> Vector2f;
+    typedef Eigen::Matrix<double,4,1,Eigen::DontAlign> Vector2d;
     typedef Eigen::Vector3f Vector3f;
-	typedef Eigen::Vector3d Vector3d;
-	typedef Eigen::Array3f Array3f;
-	typedef Eigen::Array3d Array3d;
+    typedef Eigen::Vector3d Vector3d;
+    typedef Eigen::Array3f Array3f;
+    typedef Eigen::Array3d Array3d;
     typedef Eigen::Quaternion<float,Eigen::DontAlign> Quaternionf;
     typedef Eigen::Quaternion<double,Eigen::DontAlign> Quaterniond;
-	typedef Eigen::Matrix<double, 3, 3> Matrix3x3d;
+    typedef Eigen::Matrix<double, 3, 3> Matrix3x3d;
     typedef Eigen::Matrix<float, 3, 3> Matrix3x3f;
     typedef Eigen::AngleAxisd AngleAxisd;
     typedef Eigen::AngleAxisf AngleAxisf;
@@ -44,12 +44,12 @@ public:
     typedef common_utils::RandomGenerator<RealT, std::uniform_real_distribution<RealT>, 3> RandomGeneratorZT;
 
     struct Pose {
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-		Vector3T position;
-		QuaternionT orientation;
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        Vector3T position;
+        QuaternionT orientation;
 
-		Pose() 
-		{}
+        Pose() 
+        {}
 
         Pose(Vector3T position_val, QuaternionT orientation_val)
         {
@@ -57,14 +57,21 @@ public:
             position = position_val;
         }
 
-		friend Pose operator-(const Pose& lhs, const Pose& rhs)
-		{
-			return VectorMathT::subtract(lhs, rhs);
-		}
+        friend Pose operator-(const Pose& lhs, const Pose& rhs)
+        {
+            return VectorMathT::subtract(lhs, rhs);
+        }
 
-        static Pose nanPose() {
+        static Pose nanPose() 
+        {
             static const Pose nan_pose(VectorMathT::nanVector(), VectorMathT::nanQuaternion());
             return nan_pose;
+        }
+
+        static Pose zero()
+        {
+            static const Pose zero_pose(Vector3T::Zero(), QuaternionT(1, 0, 0, 0));
+            return zero_pose;
         }
     };
 
@@ -183,10 +190,10 @@ public:
     }
 
     static QuaternionT negate(const QuaternionT& q)
-	{
-		//from Gazebo implementation
-		return QuaternionT(-q.w(), -q.x(), -q.y(), -q.z());
-	}
+    {
+        //from Gazebo implementation
+        return QuaternionT(-q.w(), -q.x(), -q.y(), -q.z());
+    }
 
 
     static Vector3T getRandomVectorFromGaussian(RealT stddev = 1, RealT mean = 0)
@@ -243,17 +250,17 @@ public:
         return Vector3T(wx, wy, wz);
     }
 
-	static Vector3T nanVector()
-	{
+    static Vector3T nanVector()
+    {
         static const Vector3T val(std::numeric_limits<RealT>::quiet_NaN(), std::numeric_limits<RealT>::quiet_NaN(), std::numeric_limits<RealT>::quiet_NaN());
         return val;
-	}
+    }
 
-	static QuaternionT nanQuaternion()
-	{
-		return QuaternionT(std::numeric_limits<RealT>::quiet_NaN(), std::numeric_limits<RealT>::quiet_NaN(), 
-			std::numeric_limits<RealT>::quiet_NaN(), std::numeric_limits<RealT>::quiet_NaN());
-	}
+    static QuaternionT nanQuaternion()
+    {
+        return QuaternionT(std::numeric_limits<RealT>::quiet_NaN(), std::numeric_limits<RealT>::quiet_NaN(), 
+            std::numeric_limits<RealT>::quiet_NaN(), std::numeric_limits<RealT>::quiet_NaN());
+    }
 
     static bool hasNan(const Vector3T& v)
     {
@@ -281,29 +288,29 @@ public:
         return q;
     }
 
-	//from http://osrf-distributions.s3.amazonaws.com/gazebo/api/dev/Pose_8hh_source.html
-	static Vector3T coordPositionSubtract(const Pose& lhs, const Pose& rhs)
-	{
-		QuaternionT tmp(0,
-			lhs.position.x() - rhs.position.x(),
-			lhs.position.y() - rhs.position.y(),
-			lhs.position.z() - rhs.position.z()
-		);
+    //from http://osrf-distributions.s3.amazonaws.com/gazebo/api/dev/Pose_8hh_source.html
+    static Vector3T coordPositionSubtract(const Pose& lhs, const Pose& rhs)
+    {
+        QuaternionT tmp(0,
+            lhs.position.x() - rhs.position.x(),
+            lhs.position.y() - rhs.position.y(),
+            lhs.position.z() - rhs.position.z()
+        );
 
-		tmp = rhs.orientation.inverse() * (tmp * rhs.orientation);
+        tmp = rhs.orientation.inverse() * (tmp * rhs.orientation);
 
-		return tmp.vec();
-	}
-	static QuaternionT coordOrientationSubtract(const QuaternionT& lhs, const QuaternionT& rhs)
-	{
-		QuaternionT result(rhs.inverse() * lhs);
-		result.normalize();
-		return result;
-	}
-	static Pose subtract(const Pose& lhs, const Pose& rhs)
-	{
-		return Pose(coordPositionSubtract(lhs, rhs), coordOrientationSubtract(lhs.orientation, rhs.orientation));
-	}
+        return tmp.vec();
+    }
+    static QuaternionT coordOrientationSubtract(const QuaternionT& lhs, const QuaternionT& rhs)
+    {
+        QuaternionT result(rhs.inverse() * lhs);
+        result.normalize();
+        return result;
+    }
+    static Pose subtract(const Pose& lhs, const Pose& rhs)
+    {
+        return Pose(coordPositionSubtract(lhs, rhs), coordOrientationSubtract(lhs.orientation, rhs.orientation));
+    }
 
 
     static std::string toString(const Vector3T& vect, const char* prefix = nullptr)
@@ -357,19 +364,19 @@ public:
             return angle;
     }
 
-	/**
-	* \brief Extracts the yaw part from a quaternion, using RPY / euler (z-y'-z'') angles.
-	* RPY rotates about the fixed axes in the order x-y-z,
-	* which is the same as euler angles in the order z-y'-x''.
-	*/
-	static RealT yawFromQuaternion(const QuaternionT& q) {
-		return atan2(2.0 * (q.w() * q.z() + q.x() * q.y()),
-			1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()));
-	}
+    /**
+    * \brief Extracts the yaw part from a quaternion, using RPY / euler (z-y'-z'') angles.
+    * RPY rotates about the fixed axes in the order x-y-z,
+    * which is the same as euler angles in the order z-y'-x''.
+    */
+    static RealT yawFromQuaternion(const QuaternionT& q) {
+        return atan2(2.0 * (q.w() * q.z() + q.x() * q.y()),
+            1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()));
+    }
 
-	static QuaternionT quaternionFromYaw(RealT yaw) {
-		return QuaternionT(Eigen::AngleAxisd(yaw, Vector3T::UnitZ()));
-	}
+    static QuaternionT quaternionFromYaw(RealT yaw) {
+        return QuaternionT(Eigen::AngleAxisd(yaw, Vector3T::UnitZ()));
+    }
 };
 typedef VectorMathT<Eigen::Vector3d, Eigen::Quaternion<double,Eigen::DontAlign>, double> VectorMathd;
 typedef VectorMathT<Eigen::Vector3f, Eigen::Quaternion<float,Eigen::DontAlign>, float> VectorMathf;
