@@ -271,6 +271,13 @@ public:
         return std::isnan(q.x()) || std::isnan(q.y()) || std::isnan(q.z()) || std::isnan(q.w());
     }
 
+    static QuaternionT addAngularVelocity(const QuaternionT& orientation, const Vector3T& angular_vel, RealT dt)
+    {
+        QuaternionT dq_unit = QuaternionT(0, angular_vel.x() * 0.5f, angular_vel.y() * 0.5f, angular_vel.z() * 0.5f) * orientation;
+        QuaternionT net_q(dq_unit.coeffs() * dt + orientation.coeffs());
+        return net_q.normalized();
+    }
+
     static QuaternionT toQuaternion(RealT pitch, RealT roll, RealT yaw)
     {
         QuaternionT q;

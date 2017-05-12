@@ -42,6 +42,7 @@ public: //methods
         kinematics_.initialize(initial_kinematic_state);
 
         mass_ = mass;
+        mass_inv_ = 1.0f / mass;
         inertia_ = inertia;
         inertia_inv_ = inertia_.inverse();
         environment_ = environment;
@@ -94,6 +95,10 @@ public: //methods
     {
         return mass_;
     }
+    real_T getMassInv()  const
+    {
+        return mass_inv_;
+    }    
     const Matrix3x3r& getInertia()  const
     {
         return inertia_;
@@ -164,7 +169,7 @@ public:
     TTimePoint last_kinematics_time;
 
 private:
-    real_T mass_;
+    real_T mass_, mass_inv_;
     Matrix3x3r inertia_, inertia_inv_;
 
     Kinematics kinematics_;
