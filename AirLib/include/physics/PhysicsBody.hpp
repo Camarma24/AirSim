@@ -11,21 +11,45 @@
 #include "Kinematics.hpp"
 #include "Environment.hpp"
 #include <unordered_set>
+#include <exception>
 
 namespace msr { namespace airlib {
 
 class PhysicsBody : public UpdatableObject {
-public: //abstract interface
-    virtual Vector3r getLinearDragFactor() const = 0;
-    virtual Vector3r getAngularDragFactor() const = 0;
-    virtual uint vertexCount() const = 0;
+public: //interface
     virtual void kinematicsUpdated() = 0;
     virtual real_T getRestitution() const = 0;
     virtual real_T getFriction() const = 0;
     //derived class may return covariant type
-    //TODO: add const version
-    virtual PhysicsBodyVertex& getVertex(uint index) = 0;
-    virtual const PhysicsBodyVertex& getVertex(uint index) const = 0;
+    virtual uint wrenchVertexCount() const
+    {
+        return 0;
+    }
+    virtual PhysicsBodyVertex& getWrenchVertex(uint index)
+    {
+        throw std::out_of_range("no physics vertex are available");
+    }
+    virtual const PhysicsBodyVertex& getWrenchVertex(uint index) const
+    {
+        throw std::out_of_range("no physics vertex are available");
+    }
+
+    virtual uint dragVertexCount() const
+    {
+        return 0;
+    }
+    virtual PhysicsBodyVertex& getDragVertex(uint index)
+    {
+        throw std::out_of_range("no physics vertex are available");
+    }
+    virtual const PhysicsBodyVertex& getDragVertex(uint index) const
+    {
+        throw std::out_of_range("no physics vertex are available");
+    }
+    void setWrench(const Wrench&  wrench)
+    {
+        wrench_ = wrench;
+    }
 
 public: //methods
     //constructors
@@ -75,8 +99,8 @@ public: //methods
         kinematics_.update();
 
         //update individual vertices
-        for (uint vertex_index = 0; vertex_index < vertexCount(); ++vertex_index) {
-            getVertex(vertex_index).update();
+        for (uint vertex_index = 0; vertex_index < wrenchVertexCount(); ++vertex_index) {
+            getWrenchVertex(vertex_index).update();
         }
     }
     virtual void reportState(StateReporter& reporter) override
@@ -149,10 +173,6 @@ public: //methods
     const Wrench& getWrench() const
     {
         return wrench_;
-    }
-    void setWrench(const Wrench&  wrench)
-    {
-        wrench_ = wrench;
     }
     const CollisionInfo& getCollisionInfo() const
     {

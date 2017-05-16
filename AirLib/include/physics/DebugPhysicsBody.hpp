@@ -16,16 +16,7 @@ public:
     {
         vertex_.initialize(Vector3r(0, 0, 0), Vector3r(0, 0, -1));
     }
-
-    virtual Vector3r getLinearDragFactor() const override 
-    {
-        return linear_drag_factor_;
-    }
-    virtual Vector3r getAngularDragFactor() const override 
-    {
-        return linear_drag_factor_;
-    }
-    virtual uint vertexCount() const override
+    virtual uint wrenchVertexCount() const override
     {
         return 1;
     }
@@ -45,11 +36,11 @@ public:
     {
         return 0.7f;
     }
-    virtual PhysicsBodyVertex& getVertex(uint index) override
+    virtual PhysicsBodyVertex& getWrenchVertex(uint index) override
     {
         return vertex_;
     }
-    virtual const PhysicsBodyVertex& getVertex(uint index) const override
+    virtual const PhysicsBodyVertex& getWrenchVertex(uint index) const override
     {
         return vertex_;
     }

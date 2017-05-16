@@ -68,28 +68,26 @@ private:
         //get current kinematics state of the body - this state existed since last dt seconds
         const Kinematics::State& current = body.getKinematics();
         Kinematics::State next;
-        Wrench next_wrench;
 
-        getNextKinematicsNoCollison(dt, body, current, next, next_wrench);
+        getNextKinematicsNoCollison(dt, body, current, next);
 
-        getNextKinematicsOnCollison(dt, body, current, next, next_wrench);
+        getNextKinematicsOnCollison(dt, body, current, next);
         //if (!getNextKinematicsOnCollison(dt, body, current, next, next_wrench))
         //    getNextKinematicsOnGround(dt, body, current, next, next_wrench);
         
         body.setKinematics(next);
-        body.setWrench(next_wrench);
         body.kinematicsUpdated();
     }
 
-    static Wrench getTotalWrench(const PhysicsBody& body, const Quaternionr& orientation)
+    static Wrench getBodyWrench(const PhysicsBody& body, const Quaternionr& orientation)
     {
         //set wrench sum to zero
         Wrench wrench = Wrench::zero();
 
         //calculate total force on rigid body's center of gravity
-        for (uint i = 0; i < body.vertexCount(); ++i) {
+        for (uint i = 0; i < body.wrenchVertexCount(); ++i) {
             //aggregate total
-            const PhysicsBodyVertex& vertex = body.getVertex(i);
+            const PhysicsBodyVertex& vertex = body.getWrenchVertex(i);
             const auto& vertex_wrench = vertex.getWrench();
             wrench += vertex_wrench;
 
@@ -105,40 +103,37 @@ private:
         return wrench;
     }
 
-    static Vector3r getLinearDragForce(const Vector3r& velocity, const PhysicsBody& body, const Quaternionr& orientation)
+    static Wrench getDragWrench(const PhysicsBody& body, const Quaternionr& orientation, 
+        const Twist& twist)
     {
         //add linear drag due to velocity we had since last dt seconds
         //drag vector magnitude is proportional to v^2, direction opposite of velocity
         //total drag is b*v + c*v*v but we ignore the first term as b << c (pg 44, Classical Mechanics, John Taylor)
         //To find the drag force, we find the magnitude in the body frame and unit vector direction in world frame
-
-        Vector3r velocity_body = VectorMath::transformToBodyFrame(velocity, orientation);
-        real_T velocity_body_norm = velocity_body.norm();
-        Vector3r drag_force_world = Vector3r::Zero();
-        if (!Utils::isApproximatelyZero(velocity_body_norm, 1E-1f)) {
-            Vector3r drag_force_body = 
-                body.getLinearDragFactor()
-                .cwiseProduct(velocity_body)
-                .cwiseProduct(velocity_body);
-            drag_force_world = - (velocity / velocity_body_norm) * drag_force_body.norm();
-        }
-
-        return drag_force_world;
-    }
-
-    static Vector3r getAngularDrag(const Vector3r& ang_velocity, const PhysicsBody& body, const Quaternionr& orientation)
-    {
         //http://physics.stackexchange.com/questions/304742/angular-drag-on-body
-        Vector3r ang_velocity_body = VectorMath::transformToBodyFrame(ang_velocity, orientation);
-        real_T avg_angular_norm = ang_velocity_body.norm();
-        Vector3r angular_drag = Vector3r::Zero();
-        //if angular velocity is too low (for example, random noise), 1/norm can get randomly big and generate huge drag
-        if (!Utils::isApproximatelyZero(avg_angular_norm, 1E-1f)) {
-            Vector3r angular_drag_mag = body.getAngularDragFactor()
-                .cwiseProduct(ang_velocity_body)
-                .cwiseProduct(ang_velocity_body);
-            angular_drag = - (ang_velocity_body / avg_angular_norm) * angular_drag_mag.norm();
+
+        Wrench wrench = Wrench::zero();
+        real_T air_density = body.getEnvironment().getState().air_density;
+
+        for (uint vi = 0; vi < body.dragVertexCount(); ++vi) {
+            const auto& vertex = body.getDragVertex(vi);
+            Vector3r vel_vertex = twist.angular.cross(vertex.getPosition()) + twist.linear;
+            Vector3r vel_body = VectorMath::transformToBodyFrame(vel_vertex, orientation);
+            real_T vel_comp = vertex.getNormal().dot(vel_body);
+            if (vel_comp > 0.1f) {
+                Vector3r drag_force = vertex.getNormal() * (- vertex.getDragFactor() * air_density * vel_comp * vel_comp);
+                Vector3r drag_torque = vertex.getPosition().cross(drag_force);
+
+                wrench.force += drag_force;
+                wrench.torque += drag_torque;
+            }
         }
+
+        //convert to world frame
+        wrench.force = VectorMath::transformToWorldFrame(wrench.force, orientation);
+        wrench.torque = VectorMath::transformToWorldFrame(wrench.torque, orientation);
+
+        return wrench;
     }
 
     static Vector3r getAvgForPeriod(const Vector3r& first_order, const Vector3r& second_order, real_T dt)
@@ -146,55 +141,73 @@ private:
         return second_order * (0.5f * dt) + first_order;
     }
 
-    void getNextKinematicsNoCollison(TTimeDelta dt, const PhysicsBody& body, const Kinematics::State& current, Kinematics::State& next, Wrench& wrench)
+    static void updatePose(const Kinematics::State& current, Kinematics::State& next, real_T dt)
+    {
+        //get average during period
+        Vector3r avg_velocity = (current.twist.linear + next.twist.linear) * 0.5f;
+        Vector3r avg_angular = (current.twist.angular + next.twist.angular) * 0.5f;
+
+        //update position
+        next.pose.position = current.pose.position + (avg_velocity * dt);
+        //update orientation
+        real_T half_dt = 0.5f * dt;
+        next.pose.orientation =  Quaternionr(0 + current.pose.orientation.x(), 
+            avg_angular.x() * half_dt + current.pose.orientation.x(), 
+            avg_angular.y() * half_dt + current.pose.orientation.y(), 
+            avg_angular.z() * half_dt + current.pose.orientation.z());
+        next.pose.orientation.normalize();
+    }
+
+    static void updateTwist(Kinematics::State& next, const Matrix3x3r& inertia_inv_world, const PhysicsBody& body)
+    {
+        next.twist.linear = next.momentums.linear * body.getMassInv();
+        next.twist.angular = inertia_inv_world * next.momentums.linear;
+    }
+
+    void getNextKinematicsNoCollison(TTimeDelta dt, const PhysicsBody& body, const Kinematics::State& current, Kinematics::State& next)
     {
         /************************* Get force and torque acting on body ************************/
         real_T dt_real = static_cast<real_T>(dt);
 
-
-        Vector3r avg_velocity = getAvgForPeriod(current.twist.linear, current.accelerations.linear, dt_real);
-        Vector3r avg_angular = getAvgForPeriod(current.twist.angular, current.accelerations.angular, dt_real);
-        Quaternionr orientation = VectorMath::addAngularVelocity(current.pose.orientation, avg_angular, dt_real);
-        Matrix3x3r rotation = orientation.toRotationMatrix();
-        Matrix3x3r insertia_world = rotation * body.getInertia() * rotation.transpose();
-        Matrix3x3r insertia_inv_world = rotation * body.getInertiaInv() * rotation.transpose();
+        //approximate current orientation by taking mid-point
+        Quaternionr orientation_avg = VectorMath::addAngularVelocity(current.pose.orientation, current.twist.angular * 0.5f, dt_real);
 
         //get forces on the body
-        wrench = getTotalWrench(body, orientation);
-        wrench.force += getLinearDragForce(avg_velocity, body, orientation);
-        wrench.torque += getAngularDrag(avg_angular, body, orientation);
+        Wrench body_wrench = getBodyWrench(body, orientation_avg);
+        //TODO: should use midpoint for velocities below?
+        Wrench drag_wrench = getDragWrench(body, orientation_avg, current.twist);
+        next.wrench = body_wrench + drag_wrench;
 
+        //integrate wrench during dt
+        Vector3r force_avg = (body.getEnvironment().getState().gravity * body.getMass()) + ((current.wrench.force + next.wrench.force) * 0.5f);
+        Vector3r torque_avg = (current.wrench.torque + next.wrench.torque) * 0.5f;
 
-        /************************* Update accelerations due to force and torque ************************/
-        //get new acceleration due to force - we'll use this acceleration in next time step
-        next.accelerations.linear = wrench.force * body.getMassInv() + body.getEnvironment().getState().gravity;
-        //Verlet integration: http://www.physics.udel.edu/~bnikolic/teaching/phys660/numerical_ode/node5.html
-        next.pose.position = current.pose.position + avg_velocity * dt_real;
-        next.twist.linear = current.twist.linear + (current.accelerations.linear + next.accelerations.linear) * (0.5f * dt_real);
+        //get world insertia tensor for current orientation
+        Matrix3x3r rotation_avg = orientation_avg.toRotationMatrix();
+        Matrix3x3r inertia_inv_world = rotation_avg * body.getInertiaInv() * rotation_avg.transpose();
 
+        //update next moments and compute average for the period
+        next.momentums.linear = current.momentums.linear + (force_avg * dt_real);
+        next.momentums.angular = current.momentums.angular + (torque_avg * dt_real);
 
-        /************************* Update pose and linear velocity ************************/
-        next.accelerations.angular = insertia_inv_world * wrench.torque;
-        next.twist.angular = current.twist.angular + (current.accelerations.angular + next.accelerations.angular) * (0.5f * dt_real);
+        updateTwist(next, inertia_inv_world, body);
+        updatePose(current, next, dt_real);
     }
 
-    bool getNextKinematicsOnCollison(TTimeDelta dt, const PhysicsBody& body, const Kinematics::State& current, Kinematics::State& next, Wrench& next_wrench)
+    bool getNextKinematicsOnCollison(TTimeDelta dt, const PhysicsBody& body, const Kinematics::State& current, Kinematics::State& next)
     {
         static constexpr uint kCollisionResponseCycles = 1;
 
         /************************* Collison response ************************/
         real_T dt_real = static_cast<real_T>(dt);
         const CollisionInfo collison_info = body.getCollisionInfo();
+
         //if there is collison
         if (collison_info.has_collided) {
-            //determine if we are going away from collison?
-            Vector3r vnext_linear = next.twist.linear + next.accelerations.linear * dt_real;
-            Vector3r vnext_angular = next.twist.angular + next.accelerations.angular * dt_real;
-
             //contact point vector
             Vector3r r = collison_info.impact_point - collison_info.position;
 
-            //are we hitting the bottom?
+            //if we are hitting bottom of vehicle, we move contact vector in center (as multiple collison points are not supported)
             Vector3r body_z = VectorMath::transformToWorldFrame(Vector3r::UnitZ(), current.pose.orientation, true);
             real_T body_z_world_z = body_z.dot(Vector3r::UnitZ()) - 1;
             if (body_z_world_z <= 0.1f && body_z_world_z >= -0.1f) {
@@ -207,73 +220,65 @@ private:
                 }
             }
 
-
             //net velocity at contact point
-            Vector3r vnext_angular_world = VectorMath::transformToWorldFrame(vnext_angular, next.pose.orientation, true);
-            Vector3r vnext_contact = vnext_linear + vnext_angular_world.cross(r);
+            Vector3r vnext_contact = next.twist.linear + next.twist.angular.cross(r);
             //is velocity at contact is in opposite direction as normal?
             real_T vnext_contact_normal_mag = collison_info.normal.dot(vnext_contact);
 
             //if we are not moving away
             if (Utils::isDefinitelyLessThan(vnext_contact_normal_mag, 0.0f)) {
                 //we are going to reset next kinematics using collison response
-                //first we convert our input vectors to body coordinates
+                next.wrench = Wrench::zero();
+                next.accelerations = Accelerations::zero();
 
-                Vector3r vb = VectorMath::transformToBodyFrame(current.twist.linear, next.pose.orientation);
-                Vector3r rb = VectorMath::transformToBodyFrame(r, current.pose.orientation);
-                Vector3r nb = VectorMath::transformToBodyFrame(collison_info.normal, current.pose.orientation);
-                Vector3r vcb = vb + current.twist.angular.cross(rb);
+                //get world insertia tensor for last state orientation (not the avg orientation)
+                Matrix3x3r rotation = current.pose.orientation.toRotationMatrix();
+                Matrix3x3r inertia_inv_world = rotation * body.getInertiaInv() * rotation.transpose();
 
-                //compute the magnitude of impulse force assuming collison is with fixed body
-                Vector3r rbXnb = rb.cross(nb);
-                //Vector3r rbXnbI = body.getInertiaInv() * rbXnb;
-
-                real_T j_nom = -(1 + body.getRestitution()) * vcb.dot(nb);
-                //real_T j_denom = 1.0f / body.getMass() + (body.getInertiaInv() * r.cross(collison_info.normal).cross(r)).dot(collison_info.normal);
-                //real_T rbXnb_dot_rbXnbI = rbXnb.dot(rbXnbI);
-                Vector3r i_temp = body.getInertiaInv() * rbXnb;
-                Vector3r i_temp2 = i_temp.cross(rb);
-                real_T j_denom = (1.0f / body.getMass()) + i_temp2.dot(nb);
-                    //(body.getInertiaInv() * r.cross(collison_info.normal).cross(r)).dot(collison_info.normal);
+                Vector3r rXn = r.cross(collison_info.normal);
+                real_T j_denom = body.getMassInv() + (rXn.dot(inertia_inv_world * rXn));
+                real_T j_nom = -(1 + body.getRestitution()) * vnext_contact_normal_mag;
                 real_T j = j_nom / j_denom;
 
-                next.twist.linear = current.twist.linear + (j * collison_info.normal / body.getMass());
-                Vector3r a_temp = rb.cross(j * nb);
-                next.twist.angular = current.twist.angular + (body.getInertiaInv() * a_temp);
+                next.momentums.linear = current.momentums.linear + (collison_info.normal * j);
+                next.momentums.angular = current.momentums.angular + (r.cross(collison_info.normal) * j);
 
-                ////compute new velocity at contact
-                //vb = VectorMath::transformToBodyFrame(current.twist.linear, next.pose.orientation);
-                //vcb = vb + current.twist.angular.cross(rb);
-                //Vector3r vtb = vcb - nb * vcb.dot(nb);
-                //if (Utils::isDefinitelyGreaterThan(vtb.squaredNorm(), 1E-6f)) {
-                //    Vector3r vtnb = vtb.normalized();
-                //    real_T jf_nom = - vcb.dot(vtnb);
-                //    //real_T jf_denom = 1.0f / body.getMass() + (body.getInertiaInv() * r.cross(tangent).cross(r)).dot(tangent);
-                //    real_T jf_denom = 1.0f / body.getMass() +
-                //        rb.cross(vtnb).dot(body.getInertiaInv() * rb.cross(vtnb));
-                //    real_T jf = Utils::clip(jf_nom / jf_denom, -body.getFriction() * j, body.getFriction() * j);
+                updateTwist(next, inertia_inv_world, body);
 
-                //    Vector3r vtn = VectorMath::transformToWorldFrame(vtnb, current.pose.orientation);
-                //    next.twist.linear += (jf * vtn / body.getMass());
-                //    next.twist.angular += (jf * body.getInertiaInv() * rb.cross(vtnb));
-                //}
+                //compute new velocity at contact
+                vnext_contact = next.twist.linear + next.twist.angular.cross(r);
+                Vector3r vtangent = vnext_contact - (collison_info.normal * (vnext_contact.dot(collison_info.normal)));
+                if (Utils::isDefinitelyGreaterThan(vtangent.squaredNorm(), 1E-6f)) {
+                    Vector3r vtangent_norm = vtangent.normalized();
+                    //contact velocity along the tangent
+                    Vector3r rXt = r.cross(vtangent_norm);
+                    real_T jt_denom = body.getMassInv() + (rXt.dot(inertia_inv_world * rXt));
+                    real_T jt_nom = vnext_contact.dot(vtangent_norm);   
+                    real_T jt = -jt_nom / jt_denom;
+                    real_T jt_clipped = Utils::clip(jt, -body.getFriction() * j, body.getFriction() * j);
 
-                //there is no acceleration during collison response
-                next.accelerations.linear = Vector3r::Zero();
-                next.accelerations.angular = Vector3r::Zero();
+                    next.momentums.linear = next.momentums.linear + (vtangent_norm * jt_clipped);
+                    next.momentums.angular = next.momentums.angular + (r.cross(vtangent_norm) * jt_clipped);
+
+                    updateTwist(next, inertia_inv_world, body);
+
+                    Kinematics::State current_col = current;
+                    current_col.pose.position = collison_info.position + (collison_info.normal * collison_info.penetration_depth); // +next.twist.linear * (dt * kCollisionResponseCycles);
+
+                    updatePose(current_col, next, dt_real);
+                }
 
                 //if there is penetration, move out
-                next.pose.position = collison_info.position + (collison_info.normal * collison_info.penetration_depth); // +next.twist.linear * (dt * kCollisionResponseCycles);
-                next_wrench = Wrench::zero();
-
                 return true;
             }
             //else no collison response needed because we are already moving away
             //keep previously caomputed next kinematics
         }
+        //else there was no collison
 
         return false;
     }
+
 
     bool getNextKinematicsOnGround(TTimeDelta dt, const PhysicsBody& body, const Kinematics::State& current, Kinematics::State& next, Wrench& next_wrench)
     {

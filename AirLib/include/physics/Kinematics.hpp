@@ -16,6 +16,10 @@ public:
         Pose pose;
         Twist twist;
         Accelerations accelerations;
+        Momentums momentums;
+        //while wrench is not part of kinematics we use it here
+        //for computing integrates over time
+        Wrench wrench;
 
         static State zero()
         {
@@ -24,6 +28,8 @@ public:
             zero_state.pose.orientation = Quaternionr::Identity();
             zero_state.twist = Twist::zero();
             zero_state.accelerations = Accelerations::zero();
+            zero_state.momentums = Momentums::zero();
+            zero_state.wrench = Wrench::zero();
 
             return zero_state;
         }
