@@ -118,23 +118,23 @@ void ACameraDirector::inputEventFlyWithView()
 void ACameraDirector::inputManualLeft(float val)
 {
     if (!FMath::IsNearlyEqual(val, 0.f)) {
-		camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(0,-val*10,0));
+        camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(0,-val*10,0));
     }
 }
 void ACameraDirector::inputManualRight(float val)
 {
     if (!FMath::IsNearlyEqual(val, 0.f))
-		camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(0, val * 10, 0));
+        camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(0, val * 10, 0));
 }
 void ACameraDirector::inputManualForward(float val)
 {
     if (!FMath::IsNearlyEqual(val, 0.f))
-		camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(val * 10, 0, 0));
+        camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(val * 10, 0, 0));
 }
 void ACameraDirector::inputManualBackward(float val)
 {
     if (!FMath::IsNearlyEqual(val, 0.f))
-	camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(-val * 10, 0, 0));
+    camera_location_manual_ += camera_rotation_manual_.RotateVector(FVector(-val * 10, 0, 0));
 }
 void ACameraDirector::inputManualMoveUp(float val)
 {

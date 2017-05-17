@@ -55,7 +55,7 @@ public:
             const auto& pos = body.getKinematics().pose.position;
             if (pos.z() - body_height >= ground_level) {
                 col.has_collided = true;
-                col.impact_point = body.getKinematics().pose.position - Vector3r(0, body_height, body_height);
+                col.impact_point = pos - Vector3r(0, body_height, body_height);
                 col.normal = Vector3r(0, 0, -1);
                 col.penetration_depth = 0;
                 col.position = body.getKinematics().pose.position;
