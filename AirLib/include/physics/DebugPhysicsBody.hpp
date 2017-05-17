@@ -27,7 +27,11 @@ public:
         std::cout << " Ori: " << VectorMath::toString(kinematics.pose.orientation) << std::endl;
         std::cout << " Lin Vel: " << VectorMath::toString(kinematics.twist.linear);
         std::cout << " Ang Vel: " << VectorMath::toString(kinematics.twist.angular) << std::endl;
+        std::cout << " Lin Mom: " << VectorMath::toString(kinematics.momentums.linear);
+        std::cout << " Ang Mom: " << VectorMath::toString(kinematics.momentums.angular) << std::endl;
+        std::cout << " ------------------------------------------------" << std::endl;
     }
+
     virtual real_T getRestitution() const override 
     {
         return 0.5f;

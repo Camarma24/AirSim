@@ -14,24 +14,27 @@ public:
 
         std::shared_ptr<DebugClock> clock = std::make_shared<DebugClock>();
         ClockFactory::get(clock);
-        
+
+        constexpr real_T sphere_radius = 0.1f;
+        constexpr real_T sphere_mass = 1.0f;
+
+        //set up physics body
+        Matrix3x3r inertia = Matrix3x3r::Zero();
+        inertia(0, 0) = 2.0f/3 * sphere_mass * sphere_radius;
+        inertia(1, 1) = 2.0f/3 * sphere_mass * sphere_radius;
+        inertia(2, 2) = 2.0f/3 * sphere_mass * sphere_radius;
+
         //init physics state
         auto initial_kinematics = Kinematics::State::zero();
         initial_kinematics.pose = Pose::zero();
         initial_kinematics.pose.position.z() = -1;
-        initial_kinematics.twist.angular = Vector3r(0, 1, 0);
+        initial_kinematics.momentums.angular = Vector3r::Zero();//  inertia * Vector3r(0, 1, 0);
         msr::airlib::Environment::State initial_environment;
         initial_environment.position = initial_kinematics.pose.position;
         Environment environment(initial_environment);
 
-        //set up physics body
-        Matrix3x3r inertia = Matrix3x3r::Zero();
-        inertia(0, 0) = 0.001f;
-        inertia(1, 1) = 0.005f;
-        inertia(2, 2) = 0.001f;
-        
         DebugPhysicsBody body;
-        body.initialize(2.0f, inertia, initial_kinematics, &environment);
+        body.initialize(sphere_mass, inertia, initial_kinematics, &environment);
 
         //create physics engine
         FastPhysicsEngine physics;
@@ -50,15 +53,19 @@ public:
 
             CollisionInfo col;
 
-            constexpr real_T body_height = -0.1f;
             constexpr real_T ground_level = -0.8f;
             const auto& pos = body.getKinematics().pose.position;
-            if (pos.z() - body_height >= ground_level) {
+            real_T penetration = pos.z() + sphere_radius - ground_level;
+            if (penetration >= 0) {
                 col.has_collided = true;
-                col.impact_point = pos - Vector3r(0, body_height, body_height);
+
+                //desired params
                 col.normal = Vector3r(0, 0, -1);
-                col.penetration_depth = 0;
-                col.position = body.getKinematics().pose.position;
+                Vector3r r = Vector3r(0, 0, sphere_radius);
+
+                //computed params
+                col.penetration_depth = penetration;
+                col.impact_point = col.position + r;
 
                 std::cout << "Col: " << VectorMath::toString(col.impact_point) << std::endl;
             }
