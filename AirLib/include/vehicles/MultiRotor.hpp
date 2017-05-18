@@ -191,10 +191,10 @@ private: //methods
         real_T propeller_area = M_PIf * params.rotor_params.propeller_diameter * params.rotor_params.propeller_diameter;
         real_T propeller_xsection = M_PIf * params.rotor_params.propeller_diameter * params.rotor_params.propeller_height;
 
-        real_T top_bottom_area = params.body_box.x * params.body_box.y;
-        real_T left_right_area = params.body_box.x * params.body_box.z;
-        real_T front_back_area = params.body_box.y * params.body_box.z;
-        drag_factor_unit_ = Vector3r(
+        real_T top_bottom_area = params.body_box.x() * params.body_box.y();
+        real_T left_right_area = params.body_box.x() * params.body_box.z();
+        real_T front_back_area = params.body_box.y() * params.body_box.z();
+        Vector3r drag_factor_unit = Vector3r(
             front_back_area + rotors_.size() * propeller_xsection, 
             left_right_area + rotors_.size() * propeller_xsection, 
             top_bottom_area + rotors_.size() * propeller_area) 
@@ -202,12 +202,12 @@ private: //methods
 
         //add six drag vertices representing 6 sides
         drag_vertices_.clear();
-        drag_vertices_.emplace_back(Vector3r(0, 0, -params.body_box.z), Vector3r(0, 0, -1), drag_factor_unit_.z());
-        drag_vertices_.emplace_back(Vector3r(0, 0,  params.body_box.z), Vector3r(0, 0,  1), drag_factor_unit_.z());
-        drag_vertices_.emplace_back(Vector3r(0, -params.body_box.y, 0), Vector3r(0, -1, 0), drag_factor_unit_.y());
-        drag_vertices_.emplace_back(Vector3r(0,  params.body_box.y, 0), Vector3r(0,  1, 0), drag_factor_unit_.y());
-        drag_vertices_.emplace_back(Vector3r(-params.body_box.x, 0, 0), Vector3r(-1, 0, 0), drag_factor_unit_.x());
-        drag_vertices_.emplace_back(Vector3r( params.body_box.x, 0, 0), Vector3r( 1, 0, 0), drag_factor_unit_.x());
+        drag_vertices_.emplace_back(Vector3r(0, 0, -params.body_box.z()), Vector3r(0, 0, -1), drag_factor_unit.z());
+        drag_vertices_.emplace_back(Vector3r(0, 0,  params.body_box.z()), Vector3r(0, 0,  1), drag_factor_unit.z());
+        drag_vertices_.emplace_back(Vector3r(0, -params.body_box.y(), 0), Vector3r(0, -1, 0), drag_factor_unit.y());
+        drag_vertices_.emplace_back(Vector3r(0,  params.body_box.y(), 0), Vector3r(0,  1, 0), drag_factor_unit.y());
+        drag_vertices_.emplace_back(Vector3r(-params.body_box.x(), 0, 0), Vector3r(-1, 0, 0), drag_factor_unit.x());
+        drag_vertices_.emplace_back(Vector3r( params.body_box.x(), 0, 0), Vector3r( 1, 0, 0), drag_factor_unit.x());
 
     }
 
@@ -217,9 +217,6 @@ private: //fields
     //let us be the owner of rotors object
     vector<Rotor> rotors_;
     vector<PhysicsBodyVertex> drag_vertices_;
-
-    //drag
-    Vector3r drag_factor_unit_;
 };
 
 }} //namespace
