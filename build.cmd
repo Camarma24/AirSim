@@ -16,7 +16,7 @@ IF %ERRORLEVEL% NEQ 0 (
 REM //---------- compile rpclib that we got from git submodule ----------
 IF NOT EXIST external\rpclib\build mkdir external\rpclib\build
 cd external\rpclib\build
-cmake -G"Visual Studio 14 2015 Win64" ..
+cmake -G"Visual Studio 15 2017 Win64" ..
 cmake --build .
 cmake --build . --config Release
 if ERRORLEVEL 1 goto :buildfailed

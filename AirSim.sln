@@ -1,24 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DroneShell", "DroneShell\DroneShell.vcxproj", "{9FE9234B-373A-4D5A-AD6B-FB0B593312DD}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AirLib", "AirLib\AirLib.vcxproj", "{4BFB7231-077A-4671-BD21-D3ADE3EA36E7}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloDrone", "HelloDrone\HelloDrone.vcxproj", "{98BB426F-6FB5-4754-81BC-BB481900E135}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MavLinkCom", "MavLinkCom\MavLinkCom.vcxproj", "{8510C7A4-BF63-41D2-94F6-D8731D137A5A}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DroneServer", "DroneServer\DroneServer.vcxproj", "{A050F015-87E2-498F-866A-2E5AF65AF7AC}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MavLinkTest", "MavLinkCom\MavLinkTest\MavLinkTest.vcxproj", "{25EB67BE-468A-4AA5-910F-07EFD58C5516}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Examples", "Examples\Examples.vcxproj", "{C679466F-9D35-4AFC-B9AE-F9FB5448FB99}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AirLibUnitTests", "AirLibUnitTests\AirLibUnitTests.vcxproj", "{2A61ED54-2B66-4B9B-99FA-299DD0EF57CD}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unreal", "Unreal", "{04B515C0-07BC-4CE8-8A16-F0D70E86C7C9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{A3E13CC1-566C-46BD-B46C-45FC31CF12CF}"
@@ -79,8 +63,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SimMode", "SimMode", "{6175
 		Unreal\Plugins\AirSim\Source\SimMode\SimModeWorldMultiRotor.h = Unreal\Plugins\AirSim\Source\SimMode\SimModeWorldMultiRotor.h
 	EndProjectSection
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PythonClient", "PythonClient\PythonClient.pyproj", "{E2049E20-B6DD-474E-8BCA-1C8DC54725AA}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Recording", "Recording", "{66DAD5E7-6925-4266-8E04-91F19052623A}"
 	ProjectSection(SolutionItems) = preProject
 		Unreal\Plugins\AirSim\Source\Recording\RecordingFile.cpp = Unreal\Plugins\AirSim\Source\Recording\RecordingFile.cpp
@@ -88,6 +70,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Recording", "Recording", "{
 		Unreal\Plugins\AirSim\Source\Recording\RecordingThread.cpp = Unreal\Plugins\AirSim\Source\Recording\RecordingThread.cpp
 		Unreal\Plugins\AirSim\Source\Recording\RecordingThread.h = Unreal\Plugins\AirSim\Source\Recording\RecordingThread.h
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DroneShell", "DroneShell\DroneShell.vcxproj", "{9FE9234B-373A-4D5A-AD6B-FB0B593312DD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AirLib", "AirLib\AirLib.vcxproj", "{4BFB7231-077A-4671-BD21-D3ADE3EA36E7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloDrone", "HelloDrone\HelloDrone.vcxproj", "{98BB426F-6FB5-4754-81BC-BB481900E135}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MavLinkCom", "MavLinkCom\MavLinkCom.vcxproj", "{8510C7A4-BF63-41D2-94F6-D8731D137A5A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DroneServer", "DroneServer\DroneServer.vcxproj", "{A050F015-87E2-498F-866A-2E5AF65AF7AC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MavLinkTest", "MavLinkCom\MavLinkTest\MavLinkTest.vcxproj", "{25EB67BE-468A-4AA5-910F-07EFD58C5516}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Examples", "Examples\Examples.vcxproj", "{C679466F-9D35-4AFC-B9AE-F9FB5448FB99}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AirLibUnitTests", "AirLibUnitTests\AirLibUnitTests.vcxproj", "{2A61ED54-2B66-4B9B-99FA-299DD0EF57CD}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PythonClient", "PythonClient\PythonClient.pyproj", "{E2049E20-B6DD-474E-8BCA-1C8DC54725AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

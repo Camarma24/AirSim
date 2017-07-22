@@ -36,9 +36,9 @@ public:
 
     typedef common_utils::Utils Utils;
     //use different seeds for each component
-    typedef common_utils::RandomGenerator<RealT, std::normal_distribution<RealT>, 1> RandomGeneratorGausianXT;
-    typedef common_utils::RandomGenerator<RealT, std::normal_distribution<RealT>, 2> RandomGeneratorGausianYT;
-    typedef common_utils::RandomGenerator<RealT, std::normal_distribution<RealT>, 3> RandomGeneratorGausianZT;
+    typedef common_utils::RandomGenerator<RealT, std::normal_distribution<double>, 1> RandomGeneratorGausianXT;
+    typedef common_utils::RandomGenerator<RealT, std::normal_distribution<double>, 2> RandomGeneratorGausianYT;
+    typedef common_utils::RandomGenerator<RealT, std::normal_distribution<double>, 3> RandomGeneratorGausianZT;
     typedef common_utils::RandomGenerator<RealT, std::uniform_real_distribution<RealT>, 1> RandomGeneratorXT;
     typedef common_utils::RandomGenerator<RealT, std::uniform_real_distribution<RealT>, 2> RandomGeneratorYT;
     typedef common_utils::RandomGenerator<RealT, std::uniform_real_distribution<RealT>, 3> RandomGeneratorZT;
