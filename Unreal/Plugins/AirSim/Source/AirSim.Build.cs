@@ -67,23 +67,12 @@ public class AirSim : ModuleRules
         Definitions.Add("_SCL_SECURE_NO_WARNINGS=1");
         Definitions.Add("CRT_SECURE_NO_WARNINGS=1");
 
-        AddEigenDependency();
         PrivateIncludePaths.Add(Path.Combine(AirSimPath, "include"));
+        PrivateIncludePaths.Add(Path.Combine(AirSimPath, "deps", "eigen3"));
         AddOSLibDependencies(Target);
         LoadAirSimDependency(Target, "MavLinkCom", "MavLinkCom");
 
         SetupCompileMode(CompileMode.HeaderOnlyWithRpc, Target);
-    }
-
-    private void AddEigenDependency()
-    {
-        string eigenPath = System.Environment.GetEnvironmentVariable("EIGEN_ROOT");
-        if (string.IsNullOrEmpty(eigenPath) || !System.IO.Directory.Exists(eigenPath) || !System.IO.Directory.Exists(Path.Combine(eigenPath, "eigen3")))
-        {
-            throw new System.Exception("EIGEN_ROOT is not defined, or points to a non-existant directory, please set this environment variable.  " +
-                "See readme: " + readmurl);
-        }
-        PrivateIncludePaths.Add(Path.Combine(eigenPath, "eigen3"));
     }
 
     private void AddOSLibDependencies(ReadOnlyTargetRules Target)
