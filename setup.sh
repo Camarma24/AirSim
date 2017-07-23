@@ -9,42 +9,46 @@ pushd "$SCRIPT_DIR" >/dev/null
 #get sub modules
 git submodule update --init --recursive
 
-#get clang 3.9
-sudo apt-get install -y build-essential
-wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
-sudo apt-get update
-sudo apt-get install -y clang-3.9 clang++-3.9
-#other packages
-#sudo apt-get install -y clang-3.9-doc libclang-common-3.9-dev libclang-3.9-dev libclang1-3.9 libclang1-3.9-dbg libllvm-3.9-ocaml-dev libllvm3.9 libllvm3.9-dbg lldb-3.9 llvm-3.9 llvm-3.9-dev llvm-3.9-doc llvm-3.9-examples llvm-3.9-runtime clang-format-3.9 python-clang-3.9 libfuzzer-3.9-dev
-
-#get libc++ source
-if [[ ! -d "llvm-source" ]]; then 
-	git clone --depth=1 -b release_39  https://github.com/llvm-mirror/llvm.git llvm-source
-	git clone --depth=1 -b release_39  https://github.com/llvm-mirror/libcxx.git llvm-source/projects/libcxx
-	git clone --depth=1 -b release_39  https://github.com/llvm-mirror/libcxxabi.git llvm-source/projects/libcxxabi
-else
-	echo "folder llvm-source already exists, skipping git clone..."
-fi
-
-#build libc++
+# #get clang, libc++
 sudo rm -rf llvm-build
-mkdir -p llvm-build
-pushd llvm-build >/dev/null
+mkdir -p llvm-build/output
+wget "http://releases.llvm.org/4.0.1/clang+llvm-4.0.1-x86_64-linux-gnu-debian8.tar.xz"
+tar -xf "clang+llvm-4.0.1-x86_64-linux-gnu-debian8.tar.xz" -C llvm-build/output
+# sudo apt-get install -y build-essential
+# wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+# sudo apt-get update
+# sudo apt-get install -y clang-4.0 clang++-4.0
+# #other packages
+# #sudo apt-get install -y clang-3.9-doc libclang-common-3.9-dev libclang-3.9-dev libclang1-3.9 libclang1-3.9-dbg libllvm-3.9-ocaml-dev libllvm3.9 libllvm3.9-dbg lldb-3.9 llvm-3.9 llvm-3.9-dev llvm-3.9-doc llvm-3.9-examples llvm-3.9-runtime clang-format-3.9 python-clang-3.9 libfuzzer-3.9-dev
 
-export C_COMPILER=clang-3.9
-export COMPILER=clang++-3.9
+# #get libc++ source
+# if [[ ! -d "llvm-source-40" ]]; then 
+# 	git clone --depth=1 -b release_40  https://github.com/llvm-mirror/llvm.git llvm-source-40
+# 	git clone --depth=1 -b release_40  https://github.com/llvm-mirror/libcxx.git llvm-source-40/projects/libcxx
+# 	git clone --depth=1 -b release_40  https://github.com/llvm-mirror/libcxxabi.git llvm-source-40/projects/libcxxabi
+# else
+# 	echo "folder llvm-source already exists, skipping git clone..."
+# fi
 
-cmake -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${COMPILER} \
-      -LIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=./output \
-            ../llvm-source
+# #build libc++
+# sudo rm -rf llvm-build
+# mkdir -p llvm-build
+# pushd llvm-build >/dev/null
 
-make cxx
+# export C_COMPILER=clang-4.0
+# export COMPILER=clang++-4.0
 
-#install libc++ locally in output folder
-sudo make install-libcxx install-libcxxabi 
+# cmake -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${COMPILER} \
+#       -LIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
+#       -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=./output \
+#             ../llvm-source-40
 
-popd >/dev/null
+# make cxx
+
+# #install libc++ locally in output folder
+# sudo make install-cxx install-cxxabi 
+
+# popd >/dev/null
 
 #install EIGEN library
 if [[ -z "${EIGEN_ROOT}" ]] || [[ ! -d eigen ]]; then 

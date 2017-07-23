@@ -18,8 +18,8 @@ if [[ !(-d "./llvm-build/output/lib") ]]; then
 fi
 
 # set up paths of clang compiler
-export CC=/usr/bin/clang-3.9
-export CXX=/usr/bin/clang++-3.9
+export CC="$(pwd)/llvm-build/output/bin/clang"
+export CXX="$(pwd)/llvm-build/output/bin/clang++"
 
 #install EIGEN library
 if [[ -z "${EIGEN_ROOT}" ]]; then 
