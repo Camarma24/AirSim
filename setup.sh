@@ -14,21 +14,21 @@ sudo apt-get install -y build-essential
 
 # get clang, libc++
 sudo rm -rf llvm-build
-mkdir -p llvm-build/output
 wget "http://releases.llvm.org/4.0.1/clang+llvm-4.0.1-x86_64-linux-gnu-debian8.tar.xz"
-tar -xf "clang+llvm-4.0.1-x86_64-linux-gnu-debian8.tar.xz" -C llvm-build/output
+mkdir -p llvm-build
+tar -xf "clang+llvm-4.0.1-x86_64-linux-gnu-debian8.tar.xz" -C llvm-build
 rm "clang+llvm-4.0.1-x86_64-linux-gnu-debian8.tar.xz"
+mv ./llvm-build/clang* ./llvm-build/output
 
 #install EIGEN library
-if [[ ! -d './AirLib/deps/eigen3/Eigen' ]]; then 
-	echo "downloading eigen..."
-	wget http://bitbucket.org/eigen/eigen/get/3.3.2.zip
-	unzip 3.3.2.zip -d temp_eigen
-	mkdir -p AirLib/deps/eigen3
-	mv temp_eigen/eigen*/Eigen AirLib/deps/eigen3
-	rm -rf temp_eigen
-	rm 3.3.2.zip
-fi
+sudo rm -rf ./AirLib/deps/eigen3/Eigen
+echo "downloading eigen..."
+wget http://bitbucket.org/eigen/eigen/get/3.3.2.zip
+unzip 3.3.2.zip -d temp_eigen
+mkdir -p AirLib/deps/eigen3
+mv temp_eigen/eigen*/Eigen AirLib/deps/eigen3
+rm -rf temp_eigen
+rm 3.3.2.zip
 
 popd >/dev/null
 

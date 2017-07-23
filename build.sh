@@ -11,8 +11,8 @@ set -x
 git submodule update --init --recursive 
 
 # check for libc++
-if [[ !(-d "./llvm-build/output/lib") ]]; then
-	echo "ERROR: clang++ 3.9 and libc++ is necessary to compile AirSim and run it in Unreal 4.15"
+if [[ !(-d "./llvm-build/output/bin") ]]; then
+	echo "ERROR: clang++ and libc++ is necessary to compile AirSim and run it in Unreal engine"
 	echo "please run setup.sh first."
 	exit 1
 fi
@@ -22,7 +22,7 @@ export CC="$(pwd)/llvm-build/output/bin/clang"
 export CXX="$(pwd)/llvm-build/output/bin/clang++"
 
 #install EIGEN library
-if [[ -d "./AirLib/deps/eigen3" ]]; then 
+if [[ !(-d "./AirLib/deps/eigen3/Eigen") ]]; then 
 	echo "eigen is not installed. Please run setup.sh first."
 	exit 1
 fi
