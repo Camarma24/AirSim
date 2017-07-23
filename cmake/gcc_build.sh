@@ -14,18 +14,15 @@ pushd $SCRIPTPATH
 pushd ..
 git submodule update --init --recursive
 
-if [[ ! -d "$EIGEN_ROOT" ]]; then
-        if [[ ! -d eigen ]]; then
-                echo "downloading eigen..."
-                wget http://bitbucket.org/eigen/eigen/get/3.3.2.zip
-                unzip 3.3.2.zip -d eigen
-                pushd eigen
-                mv eigen* eigen3
-                echo "3.3.2" > version
-                popd &>/dev/null
-                rm 3.3.2.zip
-        fi
-        export EIGEN_ROOT="$(pwd)/eigen"
+#install EIGEN library
+if [[ ! -d './AirLib/deps/eigen3/Eigen' ]]; then 
+	echo "downloading eigen..."
+	wget http://bitbucket.org/eigen/eigen/get/3.3.2.zip
+	unzip 3.3.2.zip -d temp_eigen
+	mkdir -p AirLib/deps/eigen3
+	mv temp_eigen/eigen*/Eigen AirLib/deps/eigen3
+	rm -rf temp_eigen
+	rm 3.3.2.zip
 fi
 popd
 

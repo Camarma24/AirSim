@@ -22,13 +22,9 @@ export CC="$(pwd)/llvm-build/output/bin/clang"
 export CXX="$(pwd)/llvm-build/output/bin/clang++"
 
 #install EIGEN library
-if [[ -z "${EIGEN_ROOT}" ]]; then 
-	echo "EIGEN_ROOT variable is not set"
-	if [[ ! -d eigen ]]; then
-		echo "eigen is not installed. Please run setup.sh first."
-		exit 1
-	fi
-	export EIGEN_ROOT="$(pwd)/eigen"
+if [[ -d "./AirLib/deps/eigen3" ]]; then 
+	echo "eigen is not installed. Please run setup.sh first."
+	exit 1
 fi
 
 
