@@ -1,4 +1,3 @@
-#include "AirSim.h"
 #include "FlyingPawn.h"
 #include "AirBlueprintLib.h"
 #include "common/CommonStructs.hpp"

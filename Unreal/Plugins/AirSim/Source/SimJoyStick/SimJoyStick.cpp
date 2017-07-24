@@ -1,4 +1,3 @@
-#include "AirSim.h"
 #include "SimJoyStick.h"
 
 #if defined _WIN32 || defined _WIN64
@@ -7,11 +6,11 @@
 
 STRICT_MODE_OFF
 //below headers are required for using windows.h types in Unreal
-#include "AllowWindowsPlatformTypes.h"
+//#include "AllowWindowsPlatformTypes.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <XInput.h>
-#include "HideWindowsPlatformTypes.h"
+//#include "HideWindowsPlatformTypes.h"
 STRICT_MODE_ON
 
 struct SimJoyStick::impl {

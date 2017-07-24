@@ -1,7 +1,8 @@
 #pragma once
 
+#include "CoreMinimal.h"
+#include "FlyingPawn.h"
 #include "controllers/DroneControllerCancelable.hpp"
-#include "rpc/RpcLibServer.hpp"
 #include "vehicles/MultiRotor.hpp"
 #include "vehicles/MultiRotorParams.hpp"
 #include "physics//Kinematics.hpp"
@@ -10,8 +11,9 @@
 #include "VehicleConnectorBase.h"
 #include "VehicleCameraConnector.h"
 #include "ManualPoseController.h"
-#include "FlyingPawn.h"
 #include <chrono>
+#include "api/RpcLibServer.hpp"
+
 
 class MultiRotorConnector : public VehicleConnectorBase
 {

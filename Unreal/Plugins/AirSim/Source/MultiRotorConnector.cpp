@@ -1,4 +1,3 @@
-#include "AirSim.h"
 #include "MultiRotorConnector.h"
 #include "AirBlueprintLib.h"
 #include "NedTransform.h"

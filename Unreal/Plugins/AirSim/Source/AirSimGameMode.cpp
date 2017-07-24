@@ -1,5 +1,3 @@
-
-#include "AirSim.h"
 #include "AirSimGameMode.h"
 #include "SimHUD/SimHUD.h"
 #include "common/Common.hpp"

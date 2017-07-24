@@ -28,6 +28,8 @@ public class AirSim : ModuleRules
 
     private void SetupCompileMode(CompileMode mode, ReadOnlyTargetRules Target)
     {
+        LoadAirSimDependency(Target, "MavLinkCom", "MavLinkCom");
+
         switch (mode)
         {
             case CompileMode.HeaderOnlyNoRpc:
@@ -45,7 +47,6 @@ public class AirSim : ModuleRules
                 Definitions.Add("AIRLIB_NO_RPC=1");
                 break;
             case CompileMode.CppCompileWithRpc:
-                LoadAirSimDependency(Target, "MavLinkCom", "MavLinkCom");
                 LoadAirSimDependency(Target, "rpclib", "rpc");
                 break;
             default:
@@ -56,7 +57,8 @@ public class AirSim : ModuleRules
 
     public AirSim(ReadOnlyTargetRules Target) : base(Target)
     {
-        bEnforceIWYU = false; //to support 4.16
+        //bEnforceIWYU = true; //to support 4.16
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         //below is no longer supported in 4.16
         bEnableExceptions = true;
 
@@ -70,7 +72,6 @@ public class AirSim : ModuleRules
         PrivateIncludePaths.Add(Path.Combine(AirSimPath, "include"));
         PrivateIncludePaths.Add(Path.Combine(AirSimPath, "deps", "eigen3"));
         AddOSLibDependencies(Target);
-        LoadAirSimDependency(Target, "MavLinkCom", "MavLinkCom");
 
         SetupCompileMode(CompileMode.CppCompileWithRpc, Target);
     }
