@@ -20,7 +20,7 @@ STRICT_MODE_OFF
 #include "rpc/server.h"
 #include "api/RpcLibAdapators.hpp"
 //TODO: HACK: UE4 defines macro with stupid names like "check" that conflicts with msgpack library
-#define check(expr) expr
+#define check(expr) (static_cast<void>((expr)))
 STRICT_MODE_ON
 
 

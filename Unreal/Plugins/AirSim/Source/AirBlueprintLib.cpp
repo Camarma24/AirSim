@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 #include "AirBlueprintLib.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/RotatingMovementComponent.h"
 #include <exception>
 #include "common/common_utils/Utils.hpp"
