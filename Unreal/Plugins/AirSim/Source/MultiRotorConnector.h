@@ -12,7 +12,7 @@
 #include "VehicleCameraConnector.h"
 #include "ManualPoseController.h"
 #include <chrono>
-#include "api/RpcLibServer.hpp"
+#include "api/ControlServerBase.hpp"
 
 
 class MultiRotorConnector : public VehicleConnectorBase
@@ -66,7 +66,7 @@ private:
 
     msr::airlib::MultiRotorParams* vehicle_params_;
     std::unique_ptr<msr::airlib::DroneControllerCancelable> controller_cancelable_;
-    std::unique_ptr<msr::airlib::RpcLibServer> rpclib_server_;
+    std::unique_ptr<msr::airlib::ControlServerBase> rpclib_server_;
 
     struct RotorInfo {
         real_T rotor_speed;

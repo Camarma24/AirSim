@@ -6,9 +6,11 @@
 
 STRICT_MODE_OFF
 //below headers are required for using windows.h types in Unreal
+//#include "MinWindows.h"
 //#include "AllowWindowsPlatformTypes.h"
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+//#define WIN32_LEAN_AND_MEAN
+//#define NOMINMAX
+//#include <windows.h>
 #include <XInput.h>
 //#include "HideWindowsPlatformTypes.h"
 STRICT_MODE_ON
